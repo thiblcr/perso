@@ -32,6 +32,41 @@ from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 from libqtile import hook
 
+#########################################################################""
+
+floating_window_index = 0
+
+def float_cycle(qtile, forward: bool):
+    global floating_window_index
+    floating_windows = []
+    for window in qtile.current_group.windows:
+        if window.floating:
+            floating_windows.append(window)
+    if not floating_windows:
+        return
+    floating_window_index = min(floating_window_index, len(floating_windows) -1)
+    if forward:
+        floating_window_index += 1
+    else:
+        floating_window_index += 1
+    if floating_window_index >= len(floating_windows):
+        floating_window_index = 0
+    if floating_window_index < 0:
+        floating_window_index = len(floating_windows) - 1
+    win = floating_windows[floating_window_index]
+    win.cmd_bring_to_front()
+    win.cmd_focus()
+
+@lazy.function
+def float_cycle_backward(qtile):
+    float_cycle(qtile, False)
+
+@lazy.function
+def float_cycle_forward(qtile):
+    float_cycle(qtile, True)
+
+################################################################################
+
 mod = "mod4"
 terminal = "mate-terminal" #guess_terminal()
 
@@ -228,6 +263,12 @@ keys = [
     lazy.window.togroup("5")
     ),
 
+    Key(["mod1"], "Tab",
+    float_cycle_forward
+    ),
+
+    #Key([mod, alt], "comma", float_cycle_backward),
+
 
 ]
 
@@ -305,10 +346,10 @@ screens = [
             [
                 widget.CurrentLayoutIcon(),
 				widget.GroupBox(
-					font="verdana bold",
-					**group_box_settings,
-					fontsize=12
-					),
+				font="verdana bold",
+				**group_box_settings,
+				fontsize=12
+				),
 				widget.Sep(
 				linewidth=0,
 				foreground=colors[2],
@@ -367,6 +408,8 @@ screens = [
         ),
     ),
 ]
+
+
 
 # Drag floating layouts.
 mouse = [
